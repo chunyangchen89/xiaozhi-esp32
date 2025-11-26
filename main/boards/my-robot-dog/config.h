@@ -1,0 +1,48 @@
+#ifndef _BOARD_CONFIG_H_
+#define _BOARD_CONFIG_H_
+
+#include <driver/gpio.h>
+
+// Power management pins
+#define POWER_CHARGE_DETECT_PIN GPIO_NUM_21
+#define POWER_ADC_UNIT ADC_UNIT_2
+#define POWER_ADC_CHANNEL ADC_CHANNEL_3
+
+// Servo pins for 4-legged robot dog
+// Front legs
+#define FRONT_LEFT_PIN  GPIO_NUM_17
+#define FRONT_RIGHT_PIN GPIO_NUM_18
+
+// Rear legs
+#define REAR_LEFT_PIN   GPIO_NUM_8
+#define REAR_RIGHT_PIN  GPIO_NUM_3
+
+// Audio configuration
+#define AUDIO_INPUT_SAMPLE_RATE 16000
+#define AUDIO_OUTPUT_SAMPLE_RATE 24000
+#define AUDIO_I2S_METHOD_SIMPLEX
+
+#define AUDIO_I2S_MIC_GPIO_WS GPIO_NUM_4
+#define AUDIO_I2S_MIC_GPIO_SCK GPIO_NUM_5
+#define AUDIO_I2S_MIC_GPIO_DIN GPIO_NUM_6
+#define AUDIO_I2S_SPK_GPIO_DOUT GPIO_NUM_7
+#define AUDIO_I2S_SPK_GPIO_BCLK GPIO_NUM_15
+#define AUDIO_I2S_SPK_GPIO_LRCK GPIO_NUM_16
+
+// Display configuration - SSD1315 OLED 128x64 I2C
+#define DISPLAY_I2C_SDA_PIN GPIO_NUM_10
+#define DISPLAY_I2C_SCL_PIN GPIO_NUM_9
+#define DISPLAY_I2C_ADDRESS 0x3C  // Common address for SSD1306/SSD1315
+
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
+#define DISPLAY_MIRROR_X false
+#define DISPLAY_MIRROR_Y false
+
+// Boot button
+#define BOOT_BUTTON_GPIO GPIO_NUM_0
+
+// Version
+#define ROBOT_DOG_VERSION "1.0.0"
+
+#endif  // _BOARD_CONFIG_H_
