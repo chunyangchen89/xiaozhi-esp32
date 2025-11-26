@@ -12,7 +12,6 @@
 #include "display/oled_display.h"
 #include "system_reset.h"
 #include "wifi_board.h"
-#include "power_manager.h"
 
 #define TAG "MyRobotDogBoard"
 
@@ -25,7 +24,7 @@ private:
     esp_lcd_panel_handle_t panel_ = nullptr;
     Display* display_ = nullptr;
     Button boot_button_;
-    PowerManager* power_manager_ = nullptr;
+    // PowerManager* power_manager_ = nullptr;
 
     void InitializeI2c() {
         // Initialize I2C peripheral for OLED display
@@ -121,13 +120,13 @@ public:
         InitializeDogController();
         
         // Initialize power manager
-        power_manager_ = new PowerManager(POWER_CHARGE_DETECT_PIN, POWER_ADC_UNIT, POWER_ADC_CHANNEL);
+        // power_manager_ = new PowerManager(POWER_CHARGE_DETECT_PIN, POWER_ADC_UNIT, POWER_ADC_CHANNEL);
     }
 
     ~MyRobotDogBoard() {
-        if (power_manager_ != nullptr) {
-            delete power_manager_;
-        }
+        // if (power_manager_ != nullptr) {
+        //     delete power_manager_;
+        // }
     }
 
     virtual AudioCodec* GetAudioCodec() override {
@@ -139,26 +138,27 @@ public:
     }
 
     virtual Display* GetDisplay() override { return display_; }
+    
 
-    virtual Backlight* GetBacklight() override {
-        // OLED displays don't have backlights
-        static NoBacklight backlight;
-        return &backlight;
-    }
+    // virtual Backlight* GetBacklight() override {
+    //     // OLED displays don't have backlights
+    //     static NoBacklight backlight;
+    //     return &backlight;
+    // }
 
-    virtual bool GetBatteryLevel(int& level, bool& charging, bool& discharging) override {
-        if (power_manager_ != nullptr) {
-            level = power_manager_->GetBatteryLevel();
-            charging = power_manager_->IsCharging();
-            discharging = !charging;
-            return true;
-        }
-        // Fallback if power manager not initialized
-        level = 100;
-        charging = false;
-        discharging = false;
-        return false;
-    }
+    // virtual bool GetBatteryLevel(int& level, bool& charging, bool& discharging) override {
+    //     if (power_manager_ != nullptr) {
+    //         level = power_manager_->GetBatteryLevel();
+    //         charging = power_manager_->IsCharging();
+    //         discharging = !charging;
+    //         return true;
+    //     }
+    //     // Fallback if power manager not initialized
+    //     level = 100;
+    //     charging = false;
+    //     discharging = false;
+    //     return false;
+    // }
 };
 
 DECLARE_BOARD(MyRobotDogBoard);

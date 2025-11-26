@@ -3,11 +3,14 @@
 #include <algorithm>
 
 #include "freertos/idf_additions.h"
-#include "../otto-robot/oscillator.h"
+#include "oscillator.h"
+#include "esp_timer.h"
 
 static const char* TAG = "DogMovements";
 
-extern unsigned long IRAM_ATTR millis();
+unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000ULL);
+}
 
 RobotDog::RobotDog() {
     is_dog_resting_ = false;
