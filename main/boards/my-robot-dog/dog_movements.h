@@ -53,18 +53,15 @@ public:
     bool GetRestState();
     void SetRestState(bool state);
 
-    //-- Quadruped gaits
-    void Trot(float steps = 4, int period = 600, int dir = FORWARD);      // Diagonal gait
-    void Walk(float steps = 4, int period = 800, int dir = FORWARD);      // 4-beat gait
-    void Pace(float steps = 4, int period = 700, int dir = FORWARD);      // Lateral gait
-    void Bound(float steps = 2, int period = 500, int dir = FORWARD);     // Front/rear together
-    void Gallop(float steps = 2, int period = 400, int dir = FORWARD);    // Asymmetric gait
-
+    //-- Movement functions (Note: Trot/Pace/Bound/Gallop are internal functions used by adaptive walking)
+    void Trot(float steps = 4, int period = 600, int dir = FORWARD);      // **INTERNAL** - Diagonal gait for fast walking
+    void Walk(float steps = 4, int period = 800, int dir = FORWARD);      // **INTERNAL** - 4-beat gait for medium walking
+    void Pace(float steps = 4, int period = 700, int dir = FORWARD);      // **INTERNAL** - Lateral gait for slow walking
+  
     void Turn(float steps = 4, int period = 800, int dir = LEFT);         // Turn in place
     void Sit();                                                            // Sit down
     void LayDown();                                                        // Lay down flat
     void Shake();                                                          // Shake body
-    void Wiggle(float steps = 3, int period = 500);                       // Wiggle tail motion
     void Jump(float steps = 1, int period = 500);                         // Jump up
     void Bow();                                                            // Play bow gesture
     void HandShake(int leg = LEFT, float steps = 5, int period = 400);   // Shake hand/paw

@@ -189,12 +189,12 @@ void RobotDog::Execute(int amplitude[DOG_SERVO_COUNT], int offset[DOG_SERVO_COUN
 //-- HOME = Robot dog at rest position --------------------------//
 ///////////////////////////////////////////////////////////////////
 void RobotDog::Home() {
-    if (is_dog_resting_ == false) {
-        int homes[DOG_SERVO_COUNT] = {90, 90, 90, 90};  // All legs at neutral
-        MoveServos(500, homes);
-        is_dog_resting_ = true;
-    }
-    vTaskDelay(pdMS_TO_TICKS(100));
+    // Enhanced home position with proper stance
+    // Front legs slightly forward for stability, rear legs centered
+    int home_pos[DOG_SERVO_COUNT] = {85, 95, 90, 90};  // Slight forward stance
+    MoveServos(800, home_pos);
+    is_dog_resting_ = true;
+    vTaskDelay(pdMS_TO_TICKS(200));
 }
 
 bool RobotDog::GetRestState() {
@@ -300,56 +300,6 @@ void RobotDog::Pace(float steps, int period, int dir) {
 }
 
 //---------------------------------------------------------
-//-- Bound gait: Front legs together, rear legs together
-//--  Like a rabbit hop
-//---------------------------------------------------------
-void RobotDog::Bound(float steps, int period, int dir) {
-    int A[DOG_SERVO_COUNT] = {35, 35, 35, 35};
-    int O[DOG_SERVO_COUNT] = {0, 0, 0, 0};
-
-    // Front pair and rear pair
-    double phase_diff[DOG_SERVO_COUNT] = {
-        0,                    // Front Left: 0°
-        0,                    // Front Right: 0° (same as FL)
-        DEG2RAD(180),        // Rear Left: 180° (opposite to front)
-        DEG2RAD(180)         // Rear Right: 180° (opposite to front)
-    };
-
-    if (dir == BACKWARD) {
-        for (int i = 0; i < DOG_SERVO_COUNT; i++) {
-            phase_diff[i] = -phase_diff[i];
-        }
-    }
-
-    Execute(A, O, period, phase_diff, steps);
-}
-
-//---------------------------------------------------------
-//-- Gallop gait: Asymmetric running gait
-//--  Front pair slightly offset, rear pair slightly offset
-//---------------------------------------------------------
-void RobotDog::Gallop(float steps, int period, int dir) {
-    int A[DOG_SERVO_COUNT] = {40, 40, 40, 40};
-    int O[DOG_SERVO_COUNT] = {0, 0, 0, 0};
-
-    // Slight asymmetry for gallop
-    double phase_diff[DOG_SERVO_COUNT] = {
-        0,                    // Front Left: 0°
-        DEG2RAD(30),         // Front Right: 30° (slight offset)
-        DEG2RAD(180),        // Rear Left: 180°
-        DEG2RAD(210)         // Rear Right: 210° (slight offset)
-    };
-
-    if (dir == BACKWARD) {
-        for (int i = 0; i < DOG_SERVO_COUNT; i++) {
-            phase_diff[i] = -phase_diff[i];
-        }
-    }
-
-    Execute(A, O, period, phase_diff, steps);
-}
-
-//---------------------------------------------------------
 //-- Turn: Rotate in place
 //--  Left turn: left legs backward, right legs forward
 //---------------------------------------------------------
@@ -383,8 +333,8 @@ void RobotDog::Turn(float steps, int period, int dir) {
 ///////////////////////////////////////////////////////////////////
 
 void RobotDog::Sit() {
-    // Rear legs down (higher angle), front legs stay
-    int sit_pos[DOG_SERVO_COUNT] = {90, 90, 120, 120};
+    // Enhanced sit position: rear legs bent (120°), front legs slightly forward (100°)
+    int sit_pos[DOG_SERVO_COUNT] = {100, 80, 120, 120};
     MoveServos(1000, sit_pos);
     is_dog_resting_ = true;
 }
@@ -407,19 +357,6 @@ void RobotDog::Shake() {
         DEG2RAD(180)     // Rear Right (opposite)
     };
     Execute(A, O, 300, phase_diff, 5);
-}
-
-void RobotDog::Wiggle(float steps, int period) {
-    // Tail wiggle motion (rear legs alternate)
-    int A[DOG_SERVO_COUNT] = {0, 0, 20, 20};  // Only rear legs move
-    int O[DOG_SERVO_COUNT] = {0, 0, 0, 0};
-    double phase_diff[DOG_SERVO_COUNT] = {
-        0,                // Front Left: stationary
-        0,                // Front Right: stationary
-        0,                // Rear Left
-        DEG2RAD(180)     // Rear Right: opposite
-    };
-    Execute(A, O, period, phase_diff, steps);
 }
 
 void RobotDog::Jump(float steps, int period) {

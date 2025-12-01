@@ -39,49 +39,32 @@ This robot dog uses **Central Pattern Generator (CPG)** inspired oscillators for
 - **Period**: Cycle duration (milliseconds)
 - **Phase**: Timing offset relative to other legs (radians)
 
-### Supported Gaits
+### Unified Walking Gait System
 
-#### 1. Trot (Default)
-**Diagonal gait** - Front-left + Rear-right move together, Front-right + Rear-left move together.
-- **Speed**: Medium (600ms period)
-- **Stability**: High
-- **Use case**: General walking, exploration
+The robot dog uses a single **unified walking gait** that automatically adapts based on speed parameters. This simplifies control while providing varied movement styles.
 
-#### 2. Walk
-**4-beat gait** - Each leg moves individually in sequence: FL → RR → FR → RL
-- **Speed**: Slow (800ms period)
-- **Stability**: Very high
-- **Use case**: Slow, careful movement
+#### Walk (Adaptive Gait)
+**Single gait with speed-based style selection** - The same walk command produces different movement patterns based on the speed parameter:
 
-#### 3. Pace
-**Lateral gait** - Left legs move together, right legs move together
-- **Speed**: Medium (700ms period)
-- **Stability**: Medium (like camel walk)
-- **Use case**: Fast forward motion
+- **Fast Speed (300-400ms)**: **Trot-like diagonal movement** - Energetic diagonal coordination for quick travel and exploration
+- **Medium Speed (400-700ms)**: **4-beat stable walking** - Natural sequential leg movement for general transportation
+- **Slow Speed (700+ms)**: **Pace-like lateral movement** - Careful side-by-side coordination for precise navigation
 
-#### 4. Bound
-**Jumping gait** - Front legs together, rear legs together
-- **Speed**: Fast (500ms period)
-- **Stability**: Low (dynamic)
-- **Use case**: Fast forward motion, jumping
-
-#### 5. Gallop
-**Asymmetric gait** - Like a running horse
-- **Speed**: Very fast (400ms period)
-- **Stability**: Dynamic
-- **Use case**: Maximum speed
+#### Turn
+**In-place rotation** - Rotate the robot dog without changing position
+- **Direction**: Left (1) or Right (-1)
+- **Use case**: Repositioning, changing orientation, navigating tight spaces
 
 ### Special Behaviors
 
-- **Sit**: Rear legs fold, front legs stay upright
-- **Lay Down**: All legs fold to sides
-- **Shake**: Quick side-to-side body shake
-- **Wiggle**: Tail-wagging motion (rear legs alternate)
-- **Jump**: Crouch then extend all legs
-- **Bow**: Play bow gesture (front legs down, rear up)
-- **HandShake**: Lift and shake one front paw repeatedly (traditional handshake)
-- **HighFive**: Lift one front paw high and hold it (for high-five greeting)
-- **Turn**: Rotate in place (left or right)
+- **Sit**: Rear legs bend and front legs position for stable sitting posture
+- **Lay Down**: All legs extend to sides for lying flat on the ground
+- **Shake**: Quick side-to-side body shake gesture (like shaking off water)
+- **Jump**: Vertical jumping motion with crouch, leap, and landing phases
+- **Bow**: Play bow gesture - front legs lowered while rear stays elevated
+- **HandShake**: Lift and shake one front paw repeatedly (traditional handshake greeting)
+- **HighFive**: Lift one front paw high and hold it still (for high-five greeting)
+- **Home**: Return to default neutral standing position with proper forward stance
 
 ## MCP Tools (AI Control Interface)
 
@@ -98,44 +81,39 @@ This robot dog uses **Central Pattern Generator (CPG)** inspired oscillators for
 **Available Actions**:
 
 #### Gaits (require steps/speed/direction):
-- `trot`: Diagonal gait (recommended default)
-- `walk`: Slow 4-beat gait
-- `pace`: Lateral gait
-- `bound`: Bounding gait
-- `gallop`: Fast running gait
-- `turn`: Rotate in place
+- `walk`: **Adaptive walking gait** - Automatically selects movement style based on speed parameter
+  - Fast (300-400ms): Energetic trot-like diagonal movement
+  - Medium (400-700ms): Stable 4-beat walking gait
+  - Slow (700+ms): Careful pace-like lateral movement
+- `turn`: Rotate in place (left or right)
 
-#### Behaviors:
-- `sit`: Sit down
-- `laydown`: Lay flat
-- `shake`: Body shake
-- `wiggle`: Tail wiggle (requires steps/speed)
-- `jump`: Jump up
-- `bow`: Play bow
+#### Behaviors (no parameters needed unless specified):
+- `sit`: Sit down in stable posture
+- `laydown`: Lay flat on ground
+- `shake`: Body shake gesture
+- `jump`: Vertical jumping motion
+- `bow`: Play bow gesture
 - `handshake`: Shake paw repeatedly (requires direction/steps/speed, direction: 1=left paw, -1=right paw)
 - `highfive`: High-five gesture (requires direction/speed, direction: 1=left paw, -1=right paw, speed=hold_time in ms)
-- `home`: Return to rest position
+- `home`: Return to neutral standing position
 
 **Examples**:
 
 ```json
-// Trot forward 5 steps at medium speed
-{"name": "self.dog.action", "arguments": {"action": "trot", "steps": 5, "speed": 600, "direction": 1}}
+// Walk forward with medium speed (4-beat walking)
+{"name": "self.dog.action", "arguments": {"action": "walk", "steps": 5, "speed": 600, "direction": 1}}
 
-// Walk backward slowly
-{"name": "self.dog.action", "arguments": {"action": "walk", "steps": 3, "speed": 1000, "direction": -1}}
+// Fast walk - produces trot-like diagonal movement
+{"name": "self.dog.action", "arguments": {"action": "walk", "steps": 3, "speed": 350, "direction": 1}}
+
+// Slow walk - produces pace-like lateral movement
+{"name": "self.dog.action", "arguments": {"action": "walk", "steps": 3, "speed": 900, "direction": -1}}
 
 // Turn left
 {"name": "self.dog.action", "arguments": {"action": "turn", "steps": 4, "speed": 800, "direction": 1}}
 
 // Sit down
 {"name": "self.dog.action", "arguments": {"action": "sit"}}
-
-// Wiggle tail
-{"name": "self.dog.action", "arguments": {"action": "wiggle", "steps": 5, "speed": 400}}
-
-// Fast gallop forward
-{"name": "self.dog.action", "arguments": {"action": "gallop", "steps": 3, "speed": 400, "direction": 1}}
 
 // Shake left paw (handshake - repeated shaking)
 {"name": "self.dog.action", "arguments": {"action": "handshake", "direction": 1, "steps": 5, "speed": 400}}
@@ -167,13 +145,12 @@ This robot dog uses **Central Pattern Generator (CPG)** inspired oscillators for
 
 **Period values** (ms) - **Lower numbers = faster motion**:
 
-| Speed | Period | Use Case |
-|-------|--------|----------|
-| Very Fast | 300-400ms | Gallop, emergency |
-| Fast | 400-500ms | Bound, quick movements |
-| Medium | 600-800ms | Trot, general walking |
-| Slow | 900-1200ms | Walk, careful navigation |
-| Very Slow | 1300-2000ms | Precise positioning |
+| Speed | Period | Walking Style | Use Case |
+|-------|--------|--------------|----------|
+| Very Fast | 300-400ms | **Trot-like** diagonal | Quick exploration, fast travel |
+| Fast | 400-700ms | **4-beat stable walking** | General movement, normal walking |
+| Medium | 700-900ms | **Pace-like** lateral | Careful navigation, precise movement |
+| Slow | 900-2000ms | **Very controlled** walking | Precise positioning, demonstration |
 
 ## Amplitude Guidelines
 
@@ -187,14 +164,15 @@ This robot dog uses **Central Pattern Generator (CPG)** inspired oscillators for
 
 ## Voice Command Examples
 
-- "Move forward" / "Trot forward 5 steps"
+- "Move forward" / "Walk forward 5 steps"
+- "Walk fast" / "Walk slowly" / "Run" (speed-based walking)
 - "Turn left" / "Turn right"
 - "Sit down" / "Lay down"
-- "Shake" / "Wiggle your tail"
+- "Shake" / "Shake your body"
 - "Jump" / "Play bow"
 - "Shake hands" / "Give me your paw" / "Shake your left paw" (traditional handshake)
 - "Give me five" / "High five!" / "Show me your paw" / "Put your paw up" (high-five)
-- "Walk slowly" / "Run fast"
+- "Walk slowly" / "Walk quickly" / "Run fast"
 - "Stop"
 
 ## Calibration
@@ -247,9 +225,11 @@ where:
   t = current time
 ```
 
-### Gait Phase Patterns
+### Unified Walking Gait Implementation
 
-**Trot** (diagonal coordination):
+The robot dog uses a **single adaptive walking algorithm** that automatically selects different phase patterns based on the speed parameter:
+
+**Fast Speed (300-400ms)** - **Trot-like Pattern**:
 ```
 Front Left:  phase = 0°
 Front Right: phase = 180°
@@ -257,7 +237,7 @@ Rear Left:   phase = 180°
 Rear Right:  phase = 0°
 ```
 
-**Walk** (sequential):
+**Medium Speed (400-700ms)** - **4-beat Walking Pattern**:
 ```
 Front Left:  phase = 0°
 Front Right: phase = 180°
@@ -265,13 +245,15 @@ Rear Left:   phase = 270°
 Rear Right:  phase = 90°
 ```
 
-**Bound** (front/rear pairs):
+**Slow Speed (700+ms)** - **Pace-like Pattern**:
 ```
 Front Left:  phase = 0°
-Front Right: phase = 0°
-Rear Left:   phase = 180°
+Front Right: phase = 180°
+Rear Left:   phase = 0°
 Rear Right:  phase = 180°
 ```
+
+This approach provides **simplified control** while maintaining movement diversity through speed-based gait selection.
 
 ### Update Rate
 

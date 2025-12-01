@@ -33,21 +33,16 @@ private:
     };
 
     enum ActionType {
-        ACTION_TROT = 1,
-        ACTION_WALK = 2,
-        ACTION_PACE = 3,
-        ACTION_BOUND = 4,
-        ACTION_GALLOP = 5,
-        ACTION_TURN = 6,
-        ACTION_SIT = 7,
-        ACTION_LAYDOWN = 8,
-        ACTION_SHAKE = 9,
-        ACTION_WIGGLE = 10,
-        ACTION_JUMP = 11,
-        ACTION_BOW = 12,
-        ACTION_HOME = 13,
-        ACTION_HANDSHAKE = 14,
-        ACTION_HIGHFIVE = 15
+        ACTION_WALK = 1,     // Unified walking gait (replaces trot, pace, gallop, bound)
+        ACTION_TURN = 2,
+        ACTION_SIT = 3,
+        ACTION_LAYDOWN = 4,
+        ACTION_SHAKE = 5,
+        ACTION_JUMP = 6,     // Replaces bound
+        ACTION_BOW = 7,
+        ACTION_HOME = 8,
+        ACTION_HANDSHAKE = 9,
+        ACTION_HIGHFIVE = 10
     };
 
     static void ActionTask(void* arg) {
@@ -61,20 +56,18 @@ private:
                 controller->is_action_in_progress_ = true;
 
                 switch (params.action_type) {
-                    case ACTION_TROT:
-                        controller->dog_.Trot(params.steps, params.speed, params.direction);
-                        break;
                     case ACTION_WALK:
-                        controller->dog_.Walk(params.steps, params.speed, params.direction);
-                        break;
-                    case ACTION_PACE:
-                        controller->dog_.Pace(params.steps, params.speed, params.direction);
-                        break;
-                    case ACTION_BOUND:
-                        controller->dog_.Bound(params.steps, params.speed, params.direction);
-                        break;
-                    case ACTION_GALLOP:
-                        controller->dog_.Gallop(params.steps, params.speed, params.direction);
+                        // Use different gaits based on speed for variety
+                        if (params.speed < 400) {
+                            // Fast speed = trot-like movement
+                            controller->dog_.Trot(params.steps, params.speed, params.direction);
+                        } else if (params.speed < 700) {
+                            // Medium speed = walk
+                            controller->dog_.Walk(params.steps, params.speed, params.direction);
+                        } else {
+                            // Slow speed = pace-like movement
+                            controller->dog_.Pace(params.steps, params.speed, params.direction);
+                        }
                         break;
                     case ACTION_TURN:
                         controller->dog_.Turn(params.steps, params.speed, params.direction);
@@ -88,10 +81,7 @@ private:
                     case ACTION_SHAKE:
                         controller->dog_.Shake();
                         break;
-                    case ACTION_WIGGLE:
-                        controller->dog_.Wiggle(params.steps, params.speed);
-                        break;
-                    case ACTION_JUMP:
+                                      case ACTION_JUMP:
                         controller->dog_.Jump();
                         break;
                     case ACTION_BOW:
@@ -170,23 +160,24 @@ public:
 
         ESP_LOGI(TAG, "Registering MCP tools...");
 
-        // Unified action tool for robot dog
+        // Main action tool for robot dog with comprehensive movement behaviors
         mcp_server.AddTool(
             "self.dog.action",
-            "Execute robot dog action. action: action name; parameters based on action type: "
-            "direction: 1=forward/left, -1=backward/right; "
-            "steps: action cycles, 1-20; speed: action period in ms, 300-2000, lower=faster. "
-            "Gaits: trot (diagonal gait, needs steps/speed/direction), "
-            "walk (4-beat gait, needs steps/speed/direction), "
-            "pace (lateral gait, needs steps/speed/direction), "
-            "bound (front/rear together, needs steps/speed/direction), "
-            "gallop (asymmetric running, needs steps/speed/direction), "
-            "turn (rotate in place, needs steps/speed/direction). "
-            "Behaviors: sit (sit down), laydown (lay flat), shake (body shake), "
-            "wiggle (tail wiggle, needs steps/speed), jump (jump up), bow (play bow), "
-            "handshake (shake paw, needs direction/steps/speed, direction: 1=left paw, -1=right paw), "
-            "highfive (high-five gesture, needs direction/speed, direction: 1=left paw, -1=right paw, speed=hold_time in ms), "
-            "home (return to rest position)",
+            "Execute a specific robot dog action or movement. Use this for locomotion, behaviors, and gestures. "
+            "Parameters: action (string): the specific action to perform; direction (int): movement direction - 1=forward/left turn, -1=backward/right turn; "
+            "steps (int, 1-20): number of action cycles/repetitions; speed (int, 300-2000ms): timing period - lower=faster movement. "
+            "\n\nLOCOMOTION GAITS:\n"
+            "- walk: Primary walking gait with adaptive style based on speed parameter. Fast(300-400ms)=energetic trot-like diagonal movement for quick travel, Medium(400-700ms)=stable 4-beat walking for normal movement, Slow(700+ms)=careful pace-like lateral movement for precise navigation. Requires steps/speed/direction.\n"
+            "- turn: Rotate the dog in place. Left turn (direction=1) rotates counterclockwise, right turn (direction=-1) rotates clockwise. Useful for repositioning and changing orientation. Requires steps/speed/direction.\n\n"
+            "BEHAVIORS & GESTURES:\n"
+            "- sit: Command the dog to sit down in a natural position with rear legs bent and front legs positioned for stability. No parameters needed.\n"
+            "- laydown: Make the dog lie flat on the ground in a resting position. No parameters needed.\n"
+            "- shake: Perform a full body shake gesture as if shaking off water. Brief rhythmic side-to-side movement. No parameters needed.\n"
+            "- jump: Execute a vertical jumping motion with crouch, leap, and landing phases. Dynamic and energetic movement. No parameters needed.\n"
+            "- bow: Perform a play bow gesture - front legs lowered while rear stays elevated. Common dog communication posture for inviting play. No parameters needed.\n"
+            "- handshake: Offer a paw shake gesture. Use direction=1 for left paw, direction=-1 for right paw. The dog shifts weight appropriately and shakes the chosen paw rhythmically. Requires direction/steps/speed.\n"
+            "- highfive: Hold a paw up in a high-five position. Use direction=1 for left paw, direction=-1 for right paw. The speed parameter determines how long to hold the position (in milliseconds). Perfect for interaction demonstrations. Requires direction/speed.\n"
+            "- home: Return to the default neutral standing position with all servos centered. Used to reset position or as a stable resting stance. No parameters needed.",
             PropertyList({Property("action", kPropertyTypeString, "home"),
                           Property("steps", kPropertyTypeInteger, 4, 1, 20),
                           Property("speed", kPropertyTypeInteger, 600, 300, 2000),
@@ -198,20 +189,8 @@ public:
                 int direction = properties["direction"].value<int>();
 
                 // Gait actions
-                if (action == "trot") {
-                    QueueAction(ACTION_TROT, steps, speed, direction);
-                    return true;
-                } else if (action == "walk") {
+                if (action == "walk") {
                     QueueAction(ACTION_WALK, steps, speed, direction);
-                    return true;
-                } else if (action == "pace") {
-                    QueueAction(ACTION_PACE, steps, speed, direction);
-                    return true;
-                } else if (action == "bound") {
-                    QueueAction(ACTION_BOUND, steps, speed, direction);
-                    return true;
-                } else if (action == "gallop") {
-                    QueueAction(ACTION_GALLOP, steps, speed, direction);
                     return true;
                 } else if (action == "turn") {
                     QueueAction(ACTION_TURN, steps, speed, direction);
@@ -227,10 +206,7 @@ public:
                 } else if (action == "shake") {
                     QueueAction(ACTION_SHAKE, 1, 0, 0);
                     return true;
-                } else if (action == "wiggle") {
-                    QueueAction(ACTION_WIGGLE, steps, speed, 0);
-                    return true;
-                } else if (action == "jump") {
+                }  else if (action == "jump") {
                     QueueAction(ACTION_JUMP, 1, 0, 0);
                     return true;
                 } else if (action == "bow") {
@@ -246,12 +222,14 @@ public:
                     QueueAction(ACTION_HOME, 1, 500, 0);
                     return true;
                 } else {
-                    return "Error: Invalid action name. Available actions: trot, walk, pace, "
-                           "bound, gallop, turn, sit, laydown, shake, wiggle, jump, bow, handshake, highfive, home";
+                    return "Error: Invalid action name. Available actions: walk, turn, sit, laydown, "
+                           "shake, jump, bow, handshake, highfive, home";
                 }
             });
 
-        mcp_server.AddTool("self.dog.stop", "Stop all actions and return to home position",
+        mcp_server.AddTool("self.dog.stop", "Emergency stop function that immediately halts all ongoing dog movements and resets to a safe home position. "
+                           "Use this to stop any action in progress or when the dog needs to be safely positioned. "
+                           "This will cancel any queued movements and return all servos to their neutral positions.",
                            PropertyList(), [this](const PropertyList& properties) -> ReturnValue {
                                if (action_task_handle_ != nullptr) {
                                    vTaskDelete(action_task_handle_);
@@ -266,10 +244,12 @@ public:
 
         mcp_server.AddTool(
             "self.dog.set_trim",
-            "Calibrate individual servo position. Set trim parameters to adjust the dog's "
-            "standing posture. Settings are saved permanently. "
-            "servo_type: servo type (front_left/front_right/rear_left/rear_right); "
-            "trim_value: trim value (-50 to 50 degrees)",
+            "Fine-tune and calibrate individual servo positions to achieve perfect standing posture and movement balance. "
+            "Each servo can be adjusted by -50 to +50 degrees to compensate for mechanical variations, assembly differences, or wear. "
+            "Settings are automatically saved to persistent memory and applied on startup. "
+            "Use this when the dog leans, stands unevenly, or legs don't align properly. "
+            "Parameters: servo_type (string): which leg servo to adjust - 'front_left', 'front_right', 'rear_left', 'rear_right'; "
+            "trim_value (int, -50 to 50): degrees to offset servo position - positive values rotate clockwise, negative values rotate counter-clockwise.",
             PropertyList({Property("servo_type", kPropertyTypeString, "front_left"),
                           Property("trim_value", kPropertyTypeInteger, 0, -50, 50)}),
             [this](const PropertyList& properties) -> ReturnValue {
@@ -310,8 +290,12 @@ public:
                        " degrees, permanently saved";
             });
 
-        mcp_server.AddTool("self.dog.get_trims", "Get current servo trim settings", PropertyList(),
-                           [this](const PropertyList& properties) -> ReturnValue {
+        mcp_server.AddTool("self.dog.get_trims", "Retrieve the current calibration trim values for all four servos. "
+                           "Returns a JSON object showing the current offset in degrees for each leg servo: "
+                           "front_left, front_right, rear_left, rear_right. "
+                           "Use this to check current calibration settings or when troubleshooting posture issues. "
+                           "Values range from -50 to +50, where 0 means no trim adjustment is applied.",
+                           PropertyList(), [this](const PropertyList& properties) -> ReturnValue {
                                Settings settings("dog_trims", false);
 
                                int front_left = settings.GetInt("front_left", 0);
@@ -329,12 +313,17 @@ public:
                                return result;
                            });
 
-        mcp_server.AddTool("self.dog.get_status", "Get robot dog status, returns moving or idle",
+        mcp_server.AddTool("self.dog.get_status", "Check the current operational state of the robot dog. "
+                           "Returns 'moving' if an action is currently being executed, or 'idle' if the dog is stationary and ready for new commands. "
+                           "Use this to check if previous commands have completed before issuing new movements, or for monitoring the dog's activity in automated sequences.",
                            PropertyList(), [this](const PropertyList& properties) -> ReturnValue {
                                return is_action_in_progress_ ? "moving" : "idle";
                            });
 
-        mcp_server.AddTool("self.battery.get_level", "Get robot battery level and charging status",
+        mcp_server.AddTool("self.battery.get_level", "Monitor the power status of the robot dog. "
+                           "Returns a JSON object containing battery level (percentage) and charging status. "
+                           "Use this to check battery charge, determine when recharging is needed, or monitor power consumption during movement sequences. "
+                           "Helps prevent unexpected power loss during operation by allowing proactive battery management.",
                            PropertyList(), [](const PropertyList& properties) -> ReturnValue {
                                auto& board = Board::GetInstance();
                                int level = 0;
